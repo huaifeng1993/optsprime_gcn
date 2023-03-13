@@ -56,7 +56,7 @@ def test(data,model):
 def main():
     from torch_geometric.datasets import Planetoid
     from torch_geometric.transforms import NormalizeFeatures
-    from optsprime.dataset.german import GermanDataset 
+    from optsprime.datasets.german import GermanDataset 
     #dataset = Planetoid(root='data/Planetoid', name='Cora', transform=NormalizeFeatures())
     dataset=GermanDataset(root='data/Genman',transform=NormalizeFeatures())
     print(f'Dataset: {dataset}:')

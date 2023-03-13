@@ -26,7 +26,7 @@ class GermanDataset(InMemoryDataset):
 		num_val=int(ratio_val*num_train)
 		num_test=int(ratio_test*num_train)
 		
-		assert self.split in ['public', 'full', 'random']
+		assert self.split in ['public', 'full', 'random']#随机数种子没有确定
 		if split == 'full':
 			data = self.get(0)
 			data.train_mask.fill_(True)

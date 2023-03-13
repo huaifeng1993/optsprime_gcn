@@ -8,7 +8,8 @@ from torch_geometric.data import InMemoryDataset
 from torch_geometric.utils import train_test_split_edges
 import os
 from typing import Callable, List, Optional
-torch.manual_seed(1236)
+from ..core.utils import Register
+#torch.manual_seed(1236)
 class GermanDataset(InMemoryDataset):
 	def __init__(self,
 	             root,
