@@ -2,7 +2,6 @@ from .base import BaseFWork
 from ..builder import FRAMEWORK,build_decoder,build_encoder
 import warnings
 
-
 @FRAMEWORK.register_module()
 class GraphCls(BaseFWork):
     def __init__(self,
@@ -16,7 +15,7 @@ class GraphCls(BaseFWork):
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
-            #加载预训练权重
+        #TODO:#加载预训练权重
         self.encoder=build_encoder(encoder)
 
         if decoder is not None:
@@ -27,12 +26,18 @@ class GraphCls(BaseFWork):
         
         self.train_cfg=train_cfg
         self.test_cfg=test_cfg
+    def extract_feat(self, graph):
+        x=self.encoder(graph)
+        return x 
     
-    def forward(self, feats, data_metas, return_loss=True, **kwargs):
+    def forward(self, graph, data_metas, return_loss=True, **kwargs):
+
         return None
     
-    def forward_test(self, feats, data_metas=None, **kwargs):
+    def forward_test(self, graph, data_metas=None, **kwargs):
+        
         return None
     
-    def forward_train(self, feats, data_metas=None, **kwargs):
+    def forward_train(self, graph, data_metas=None, **kwargs):
+        x=self.encoder()
         return None

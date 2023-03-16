@@ -5,7 +5,7 @@ from collections import defaultdict
 from logging import FileHandler
 from typing import Iterable, Optional
 from torch import nn
-from .logging import logger_initialized,master_only,print_log,get_logger
+from .logging import logger_initialized,print_log,get_logger
 
 class BaseModule(nn.Module, metaclass=ABCMeta):
     """Base module for all modules in openmmlab.
@@ -126,7 +126,7 @@ class BaseModule(nn.Module, metaclass=ABCMeta):
             for sub_module in self.modules():
                 del sub_module._params_init_info
 
-    @master_only
+
     def _dump_init_info(self, logger_name: str) -> None:
         """Dump the initialization information to a file named
         `initialization.log.json` in workdir.

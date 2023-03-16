@@ -5,7 +5,7 @@ from ...core import BaseModule,constant_init
 from collections import OrderedDict
 import torch.distributed as dist
 
-class BaseFWork(BaseModule,ABCMeta):
+class BaseFWork(BaseModule,metaclass=ABCMeta):
     def __init__(self,init_cfg=None):
         super(BaseFWork,self).__init__(init_cfg)
 
@@ -21,6 +21,10 @@ class BaseFWork(BaseModule,ABCMeta):
     def with_encoder(self):
         return hasattr(self,"encoder") and self.encoder is not None
     
+    @property
+    def with_decoder(self):
+        return hasattr(self,"decoder") and self.decoder is not None
+    
     @abstractmethod
     def extract_feat(self,graph):
         pass
@@ -30,17 +34,17 @@ class BaseFWork(BaseModule,ABCMeta):
         """Compute losses of the head."""
         pass
 
-    def forward_train(self,feats,data_metas=None,**kwargs):
+    def forward_train(self,graph,data_metas=None,**kwargs):
         pass
 
-    def forward_test(self,feats,data_metas=None,**kwargs):
+    def forward_test(self,graph,data_metas=None,**kwargs):
         pass
 
-    def forward(self,feats,data_metas,return_loss=True,**kwargs):
+    def forward(self,graph,data_metas,return_loss=True,**kwargs):
         if return_loss:
-            return self.forward_train(feats,data_metas,**kwargs)
+            return self.forward_train(graph,data_metas,**kwargs)
         else:
-            return self.forward_test(feats,data_metas,**kwargs)
+            return self.forward_test(graph,data_metas,**kwargs)
     
     def _parse_losses(self, losses):
         """Parse the raw outputs (losses) of the network.

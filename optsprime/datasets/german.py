@@ -8,19 +8,21 @@ from torch_geometric.data import InMemoryDataset
 from torch_geometric.utils import train_test_split_edges
 import os
 from typing import Callable, List, Optional
-from ..core.utils import Register
+
+from .builder import DATASET
 #torch.manual_seed(1236)
+@DATASET.register_module()
 class GermanDataset(InMemoryDataset):
 	def __init__(self,
-	             root,
+	             data_root,
 				 split="random",
 				 num_train_per_class: int = 300,
 				 ratio_val: float=0.2,
 				 ratio_test:float =0.2,
 	             transform: Optional[Callable]=None,
 	             pre_transform: Optional[Callable] = None):
-		self.root = root
-		super(GermanDataset, self).__init__(root, transform, pre_transform)
+		self.root = data_root
+		super(GermanDataset, self).__init__(data_root, transform, pre_transform)
 		self.data, self.slices = torch.load(self.processed_paths[0])
 		self.split = split
 		num_train=self.get(0).num_nodes

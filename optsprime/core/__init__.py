@@ -1,5 +1,5 @@
 from .config import Config,ConfigDict
-from .registry import Registry
+from .registry import Registry,build_from_cfg
 from .base_module import BaseModule
 from .weight_init import (INITIALIZERS,update_init_info,constant_init,xavier_init,normal_init,
                           trunc_normal_init,uniform_init,kaiming_init,caffe2_xavier_init,initialize,
