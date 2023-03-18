@@ -42,7 +42,7 @@ def build_from_cfg(cfg: Dict,
                 '`cfg` or `default_args` must contain the key "type", '
                 f'but got {cfg}\n{default_args}')
     if not isinstance(registry, Registry):
-        raise TypeError('registry must be an mmcv.Registry object, '
+        raise TypeError('registry must be an optsprime.Registry object, '
                         f'but got {type(registry)}')
     if not (isinstance(default_args, dict) or default_args is None):
         raise TypeError('default_args must be a dict or None, '

@@ -1,1 +1,1 @@
-from .core import Config
+from .core import *

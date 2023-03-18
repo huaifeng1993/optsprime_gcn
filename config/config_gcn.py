@@ -1,16 +1,9 @@
-dataset_type = 'GermanDataset'
-data_root = 'data/Genman/'
-data=dict(
-    dataset_type=dataset_type,
-    train=dict(
-        type=dataset_type,
-        data_root="data/Genman"
-    ),
-    val=dict(
-        type=dataset_type,
-        data_root="data/Genman"
-    )
-)
+_base_=[
+    "./__base__/datasets/german.py",
+    "./__base__/schedules/schedule.py",
+    "./__base__/default_runtime.py"
+]
+
 model=dict(
     type="GrapNodeCls",
     encoder=dict(
