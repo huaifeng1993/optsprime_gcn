@@ -5,9 +5,22 @@ import random
 import numpy as np
 import torch
 import torch.distributed as dist
-from ..core import get_root_logger
+from ..core import (get_root_logger,find_latest_checkpoint,mkdir_or_exist,
+                    get_time_str,LogBuffer,load_checkpoint,Config)
 from ..datasets import build_dataloader
 from ..optimizers import build_optimizer,build_lrscheduler
+from torch.optim import Optimizer
+from typing import (Any, Callable, Dict, List, Optional, Tuple, Union,
+                    no_type_check)
+import os.path as osp
+from abc import ABCMeta, abstractmethod
+import warnings
+import logging
+from collections import OrderedDict
+
+import torch
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 
 def build_dp(model, device='cuda', dim=0, *args, **kwargs):
     """build DataParallel module by device type.
@@ -112,7 +125,7 @@ def auto_scale_lr(cfg, distributed, logger):
         logger.info('The batch size match the '
                     f'base batch size: {base_batch_size}, '
                     f'will not scaling the LR ({cfg.optimizer.lr}).')
-
+        
 def train_graph(model,
                    dataset,
                    cfg,
@@ -127,59 +140,12 @@ def train_graph(model,
     model = build_dp(model, cfg.device, device_ids=cfg.gpu_ids)
     # build optimizer
     optimizer = build_optimizer(model, cfg.optimizer)
-    runner = build_runner(
-        cfg.runner,
-        default_args=dict(
-            model=model,
-            optimizer=optimizer,
-            work_dir=cfg.work_dir,
-            logger=logger,
-            meta=meta))
-    # an ugly workaround to make .log and .log.json filenames the same
-    runner.timestamp = timestamp
-    optimizer_config = cfg.optimizer_config
-    # register hooks
-    runner.register_training_hooks(
-        cfg.lr_config,
-        optimizer_config,
-        cfg.checkpoint_config,
-        cfg.log_config,
-        cfg.get('momentum_config', None),
-        custom_hooks_config=cfg.get('custom_hooks', None))
-    # register eval hooks
-    if validate:
-        val_dataloader_default_args = dict(
-            samples_per_gpu=1,
-            workers_per_gpu=2,
-            dist=distributed,
-            shuffle=False,
-            persistent_workers=False)
-        val_dataloader_args = {
-            **val_dataloader_default_args,
-            **cfg.data.get('val_dataloader', {})
-        }
-        # Support batch_size > 1 in validation
-        if val_dataloader_args['samples_per_gpu'] > 1:
-            # Replace 'ImageToTensor' to 'DefaultFormatBundle'
-            cfg.data.val.pipeline = replace_ImageToTensor(
-                cfg.data.val.pipeline)
-        val_dataset = build_dataset(cfg.data.val, dict(test_mode=True))
-
-        val_dataloader = build_dataloader(val_dataset, **val_dataloader_args)
-        eval_cfg = cfg.get('evaluation', {})
-        eval_cfg['by_epoch'] = cfg.runner['type'] != 'IterBasedRunner'
-        eval_hook = DistEvalHook if distributed else EvalHook
-        # In this PR (https://github.com/open-mmlab/mmcv/pull/1193), the
-        # priority of IterTimerHook has been modified from 'NORMAL' to 'LOW'.
-        runner.register_hook(
-            eval_hook(val_dataloader, **eval_cfg), priority='LOW')
-
+    
     resume_from = None
     if cfg.resume_from is None and cfg.get('auto_resume'):
         resume_from = find_latest_checkpoint(cfg.work_dir)
     if resume_from is not None:
         cfg.resume_from = resume_from
-
     if cfg.resume_from:
         runner.resume(cfg.resume_from)
     elif cfg.load_from:

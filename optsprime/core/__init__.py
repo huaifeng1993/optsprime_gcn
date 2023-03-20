@@ -6,5 +6,8 @@ from .weight_init import (INITIALIZERS,update_init_info,constant_init,xavier_ini
                           bias_init_with_prob,ConstantInit,XavierInit,NormalInit,TruncNormalInit,
                           UniformInit,KaimingInit,Caffe2XavierInit,PretrainedInit)
 
-from .path import (is_filepath,fopen,check_file_exist,mkdir_or_exist,symlink,scandir,find_vcs_root)
-from .logger import get_logger,get_root_logger,get_caller_name
+from .path import (is_filepath,fopen,check_file_exist,mkdir_or_exist,symlink,scandir,find_vcs_root,find_latest_checkpoint)
+from .logger import get_logger,get_root_logger,get_caller_name,LogBuffer
+from .logging import get_time_str
+from .checkpoint import load_checkpoint,save_checkpoint
+from .runner import Runner

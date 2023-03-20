@@ -2,9 +2,11 @@
 import logging
 
 import torch.distributed as dist
-
+import time
 logger_initialized: dict = {}
 
+def get_time_str() -> str:
+    return time.strftime('%Y%m%d_%H%M%S', time.localtime())
 
 def get_logger(name, log_file=None, log_level=logging.INFO, file_mode='w'):
     """Initialize and get a logger by name.
