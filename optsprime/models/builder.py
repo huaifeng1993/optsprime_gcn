@@ -1,4 +1,4 @@
-from  ..core import Registry
+from mmcv.utils import Registry
 import warnings
 
 ENCODER=Registry("encoder")

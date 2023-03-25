@@ -10,9 +10,9 @@ class GCN(torch.nn.Module):
         self.conv1 = GCNConv(num_features, hidden_channels)
         self.conv2 = GCNConv(hidden_channels,num_classes)
 
-    def forward(self, x, edge_index):
-        x = self.conv1(x, edge_index)
+    def forward(self, inputs,training=True,**kwargs):
+        x = self.conv1(inputs.x,inputs.edge_index)
         x = x.relu()
-        x = F.dropout(x, p=0.5, training=self.training)
-        x = self.conv2(x, edge_index)
+        x = F.dropout(x, p=0.5, training=training)
+        x = self.conv2(x, inputs.edge_index)
         return x

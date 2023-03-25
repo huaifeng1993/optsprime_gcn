@@ -19,7 +19,6 @@ class GraphCls(BaseFWork):
         self.encoder=build_encoder(encoder)
 
         if decoder is not None:
-            decoder_cfg=train_cfg.decoder if train_cfg is not None else None
             decoder_=decoder.copy()
             decoder_.update(train_cfg=decoder,test_cfg=test_cfg.decoder)
             self.encoder=build_decoder(decoder_)
@@ -30,14 +29,16 @@ class GraphCls(BaseFWork):
         x=self.encoder(graph)
         return x 
     
-    def forward(self, graph, data_metas, return_loss=True, **kwargs):
-
+    def forward(self, inputs, return_loss=True, **kwargs):
+        if return_loss:
+            outputs=self.forward_train(inputs,**kwargs)
+        else:
+            outputs=self.forward_test(inputs,**kwargs)
         return None
     
-    def forward_test(self, graph, data_metas=None, **kwargs):
-        
+    def forward_test(self, inputs,**kwargs):
         return None
     
-    def forward_train(self, graph, data_metas=None, **kwargs):
-        x=self.encoder()
-        return None
+    def forward_train(self, inputs, **kwargs):
+        x=self.encoder(inputs)
+        return x

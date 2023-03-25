@@ -3,7 +3,7 @@ from .base import BaseFWork
 from ..builder import FRAMEWORK,build_decoder,build_encoder
 import warnings
 import torch
-
+import torch.nn.functional as F
 @FRAMEWORK.register_module()
 class GrapNodeCls(BaseFWork):
     def __init__(self,
@@ -13,7 +13,7 @@ class GrapNodeCls(BaseFWork):
                  test_cfg=None,
                  pretrained=None,
                  init_cfg=None):
-        super(GrapNodeCls,self).__init__(init_cfg)
+        super(GrapNodeCls,self).__init__(train_cfg,test_cfg,init_cfg)
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
@@ -23,29 +23,33 @@ class GrapNodeCls(BaseFWork):
             self.decoder=build_decoder(decoder)
         self.train_cfg=train_cfg
         self.test_cfg=test_cfg
-    def extract_feat(self, graph):
-        x=self.encoder(graph)
-        return x 
-    
-    # def forward(self, graph, data_metas, return_loss=True, **kwargs):
 
-    #     return None
-    
-    def forward_test(self, graph, data_metas=None, **kwargs):
-        x=self.encoder(graph)
-        if self.with_decoder:
-            x=self.decoder(x)
+    def extract_feat(self, graph,**kwargs):
+        out_puts={}
+        x=self.encoder(graph,**kwargs)
         return x
     
-    def forward_train(self, graph, data_metas=None, **kwargs):
-        x=self.encoder(graph)
+    def forward(self, inputs, return_loss=True, **kwargs):
+        if return_loss:
+            outputs=self.forward_train(inputs,**kwargs)
+        else:
+            outputs=self.forward_test(inputs,**kwargs)
+        return outputs
+    
+    def forward_test(self, inputs,**kwargs):
+        outputs=self.extract_feat(inputs,**kwargs)
+        outputs=F.softmax(outputs)
+        return outputs
+    
+    def forward_train(self, inputs, **kwargs):
+        outputs=self.extract_feat(inputs,**kwargs)
         if self.with_decoder:
-            x=self.decoder(x)
+            outputs=self.decoder(outputs)
         #TODO:计算损失函数
-        loss=self.loss(x,data_metas)
-        return loss
+        loss=self.loss(outputs,inputs.y,inputs.train_mask)
+        return {"loss":loss}
 
-    def loss(self,pred,data_metas):
-        criterion = torch.nn.CrossEntropyLoss()  # Define loss criterion.
-        bce_loss=criterion(pred[node_mask],targer[node_mask])
-        return dict(BCE=bce_loss)
+    def loss(self,pred,target,mask):
+        #criterion = torch.nn.CrossEntropyLoss()  # Define loss criterion.
+        cross_loss=F.cross_entropy(pred[mask],target[mask])
+        return cross_loss

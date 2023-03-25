@@ -58,7 +58,7 @@ def main():
     from torch_geometric.transforms import NormalizeFeatures
     from optsprime.datasets.german import GermanDataset 
     #dataset = Planetoid(root='data/Planetoid', name='Cora', transform=NormalizeFeatures())
-    dataset=GermanDataset(root='data/Genman',transform=NormalizeFeatures())
+    dataset=GermanDataset(data_root='data/Genman',transform=NormalizeFeatures())
     print(f'Dataset: {dataset}:')
     print('======================')
     print(f'Number of graphs: {len(dataset)}')

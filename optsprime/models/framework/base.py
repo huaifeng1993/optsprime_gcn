@@ -1,13 +1,16 @@
 import torch
 import numpy as np
 from abc import ABCMeta,abstractmethod
-from ...core import BaseModule,constant_init
+from mmcv.runner import BaseModule
+from mmcv.cnn import constant_init
 from collections import OrderedDict
 import torch.distributed as dist
 
 class BaseFWork(BaseModule,metaclass=ABCMeta):
-    def __init__(self,init_cfg=None):
+    def __init__(self,train_cfg=None,test_cfg=None,init_cfg=None):
         super(BaseFWork,self).__init__(init_cfg)
+        self.train_cfg=train_cfg
+        self.test_cfg=test_cfg
 
     def  init_weights(self):
         super(BaseFWork, self).init_weights()
@@ -115,7 +118,7 @@ class BaseFWork(BaseModule,metaclass=ABCMeta):
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
         outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
+            loss=loss, log_vars=log_vars)
         return outputs
     
     def val_step(self, data, optimizer=None):
@@ -126,12 +129,10 @@ class BaseFWork(BaseModule,metaclass=ABCMeta):
         """
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
-
         log_vars_ = dict()
         for loss_name, loss_value in log_vars.items():
             k = loss_name + '_val'
             log_vars_[k] = loss_value
-
         outputs = dict(
-            loss=loss, log_vars=log_vars_, num_samples=len(data['img_metas']))
+            loss=loss, log_vars=log_vars_)
         return outputs

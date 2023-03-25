@@ -6,6 +6,6 @@ import torch
 import torch.nn as nn
 from torch.nn import GroupNorm, LayerNorm
 
-from ..core import  build_from_cfg
+from mmcv.utils import  build_from_cfg
 from .builder import  OPTIMIZERS
 

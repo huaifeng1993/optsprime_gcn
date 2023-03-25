@@ -8,7 +8,7 @@ model=dict(
     type="GrapNodeCls",
     encoder=dict(
         type="GCN",
-        num_features=10,
+        num_features=28,
         hidden_channels=64,
         num_classes=2
         )

@@ -3,8 +3,7 @@ import copy
 import inspect
 from typing import Dict, List
 import torch
-from ..core import Registry, build_from_cfg
-
+from mmcv.utils import Registry, build_from_cfg
 OPTIMIZERS = Registry('optimizer')
 def register_torch_optimizers() -> List:
     torch_optimizers = []

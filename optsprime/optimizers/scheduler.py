@@ -2,7 +2,7 @@ import copy
 import inspect
 from typing import Dict, List
 import torch
-from ..core import Registry, build_from_cfg
+from mmcv.utils import Registry, build_from_cfg
 LR_SCHEDULERS = Registry('lrcheduler')
 
 def register_torch_optimizers() -> List:
