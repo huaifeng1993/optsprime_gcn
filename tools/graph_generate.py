@@ -27,6 +27,7 @@ def graph_generage(A,node_num=10,threshold=0.95):
 def create_graph_from_csv(data_path):
     data=pd.read_csv(data_path)
     data=data.drop("branchcode",axis=1)
+    data.to_csv("data/wlx/CVPA_preprocess_drop_branch_code.csv",index=False)
     data=data.to_numpy()
     edge_index=graph_generage(data,node_num=10,threshold=0.95)
     #保存边的index的csv文件，特征特征名称为dst和src
