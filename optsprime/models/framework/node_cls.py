@@ -13,7 +13,7 @@ class GrapNodeCls(BaseFWork):
                  test_cfg=None,
                  pretrained=None,
                  init_cfg=None):
-        super(GrapNodeCls,self).__init__(train_cfg,test_cfg,init_cfg)
+        super(GrapNodeCls,self).__init__(init_cfg)
         if pretrained:
             warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')

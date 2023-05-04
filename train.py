@@ -228,8 +228,8 @@ def main(local_rank, args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--py-config', default='config/config_gcn.py')
-    parser.add_argument('--work-dir', type=str, default='./out/test')
+    parser.add_argument('--py-config', default='config/config_ginfomax.py')
+    parser.add_argument('--work-dir', type=str, default='./out/test_ginfo')
     parser.add_argument('--dist', action='store_true')
     parser.add_argument('--resume-from', type=str, default='')
 
