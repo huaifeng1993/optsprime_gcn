@@ -13,7 +13,7 @@ def graph_generage(A,node_num=10,threshold=0.95):
     #cosine_sim_matrix = np.dot(A, A.T) / (norm(A, axis=1)[:, np.newaxis] * norm(A, axis=1)[np.newaxis, :])
     cosine_sim_matrix = np.zeros((len(A), len(A)))
     edges = []
-    # 循环计算余弦相似度,并选择与A[i]相似最大的10个节点生成边
+    # 循环计算余弦相似度,并选择与A[i]相似最大的10个节点生成边 
     for i in range(len(A)):
         cosine_sim_matrix[i] = np.dot(A[i], A.T) / (norm(A[i])* norm(A.T, axis=0))
         tmp_cosing_sim = cosine_sim_matrix[i]
