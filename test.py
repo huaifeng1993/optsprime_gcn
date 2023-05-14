@@ -4,7 +4,7 @@ from optsprime.models import build_framework,build_encoder
 from optsprime.optimizers import build_lrscheduler,build_optimizer
 from optsprime.datasets.graphproppred import PygGraphPropPredDataset,PyGPPDataset
 args=Config.fromfile("config/__base__/datasets/adg.py")
-args=Config.fromfile("config/__base__/datasets/german.py")
+args=Config.fromfile("config/__base__/datasets/cvpa.py")
 # print(args)
 dataset=build_dataset(args.data.train)
 data_loader=build_dataloader(dataset,args.data)

@@ -115,11 +115,12 @@ class BaseFWork(BaseModule,metaclass=ABCMeta):
                   DDP, it means the batch size on each GPU), which is used for
                   averaging the logs.
         """
-        losses = self(**data)
+        outsputs = self(**data)
+        losses = outsputs['loss']
         loss, log_vars = self._parse_losses(losses)
-        outputs = dict(
+        loss = dict(
             loss=loss, log_vars=log_vars)
-        return outputs
+        return {"loss":loss}
     
     def val_step(self, data, optimizer=None):
         """The iteration step during validation.
@@ -127,12 +128,14 @@ class BaseFWork(BaseModule,metaclass=ABCMeta):
         during val epochs. Note that the evaluation after training epochs is
         not implemented with this method, but an evaluation hook.
         """
-        losses = self(**data)
+        out = self(**data,return_loss=False)
+        predict = out['predict']
+        losses=out['loss']
         loss, log_vars = self._parse_losses(losses)
         log_vars_ = dict()
         for loss_name, loss_value in log_vars.items():
             k = loss_name + '_val'
             log_vars_[k] = loss_value
-        outputs = dict(
+        outputs = dict(predict=predict,
             loss=loss, log_vars=log_vars_)
         return outputs

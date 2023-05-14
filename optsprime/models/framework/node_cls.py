@@ -31,25 +31,29 @@ class GrapNodeCls(BaseFWork):
     
     def forward(self, inputs, return_loss=True, **kwargs):
         if return_loss:
-            outputs=self.forward_train(inputs,**kwargs)
+            outputs=self.forward_train(inputs,training=True,**kwargs)
         else:
-            outputs=self.forward_test(inputs,**kwargs)
+            outputs=self.forward_test(inputs,training=False,**kwargs)
         return outputs
     
     def forward_test(self, inputs,**kwargs):
         outputs=self.extract_feat(inputs,**kwargs)
-        outputs=F.softmax(outputs)
-        return outputs
+        if self.with_decoder:
+            outputs=self.decoder(outputs,**kwargs)
+        loss=self.loss(outputs,inputs.y,inputs.val_mask)
+        outputs=F.sigmoid(outputs)
+        return {"predict":outputs,"loss":{"cross_loss":loss}}
     
     def forward_train(self, inputs, **kwargs):
         outputs=self.extract_feat(inputs,**kwargs)
         if self.with_decoder:
-            outputs=self.decoder(outputs)
+            outputs=self.decoder(outputs,**kwargs)
         #TODO:计算损失函数
         loss=self.loss(outputs,inputs.y,inputs.train_mask)
-        return {"loss":loss}
+        return {"loss":{"cross_loss":loss}}
 
     def loss(self,pred,target,mask):
         #criterion = torch.nn.CrossEntropyLoss()  # Define loss criterion.
-        cross_loss=F.cross_entropy(pred[mask],target[mask])
+        criterion=torch.nn.BCEWithLogitsLoss(reduction="mean")
+        cross_loss=criterion(pred[mask],target[mask][:,None].to(torch.float32))
         return cross_loss

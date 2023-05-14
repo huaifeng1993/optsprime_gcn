@@ -4,3 +4,4 @@ from .metric_util import MeanIoU
 from .load_save_util import revise_ckpt,revise_ckpt_2
 from .dtype_lut import dtypeLut
 from .average_meter import AverageMeter
+from .utils import Evaluater

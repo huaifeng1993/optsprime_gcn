@@ -86,13 +86,6 @@ def main(local_rank, args):
 
     train_dataset_loader = build_dataloader(train_dataset,cfg=cfg.data)
     val_dataset_loader=build_dataloader(val_dataset,cfg=cfg.data)
-    # get metric calculator
-    # label_str = train_dataset_loader.dataset.loader.nuScenes_label_name
-    # metric_label = cfg.unique_label
-    # metric_str = [label_str[x] for x in metric_label]
-    # metric_ignore_label = cfg.metric_ignore_label
-    # CalMeanIou_pts = MeanIoU(metric_label, metric_ignore_label, metric_str, 'pts')
-
     # get optimizer, loss, scheduler
     optimizer = build_optimizer(my_model, cfg.optimizer)
     #multi_loss_func = OPENOCC_LOSS.build(cfg.loss)
@@ -135,8 +128,6 @@ def main(local_rank, args):
             print('removing img_neck.lateral_convs and img_neck.fpn_convs')
             state_dict = revise_ckpt_2(state_dict)
             print(my_model.load_state_dict(state_dict, strict=False))
-        
-
     # training
     print_freq = cfg.train_cfg.print_freq
     max_num_epochs = cfg.train_cfg.max_epochs
@@ -158,13 +149,14 @@ def main(local_rank, args):
                             kwargs=extra_inputs)
             data_time_e = time.time()
             outputs=my_model.train_step(new_inputs,optimizer)
-            loss=outputs["loss"]
-            log_vars=outputs["log_vars"]
+            loss_dict=outputs["loss"]
+            loss_all=loss_dict["loss"]
+            log_vars=loss_dict["log_vars"]
             optimizer.zero_grad()
-            loss.backward()
+            loss_all.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(my_model.parameters(), cfg.train_cfg.clip_norm)
             optimizer.step()
-            scheduler.step()
+            #scheduler.step()
             time_e = time.time()
             global_iter += 1
             if i_iter % print_freq == 0 and local_rank == 0 and rank == 0:
@@ -197,6 +189,7 @@ def main(local_rank, args):
         if epoch%cfg.train_cfg.val_step==0:
             my_model.eval()
             with torch.no_grad():
+                predict_list=[]
                 for i_iter_val, inputs in enumerate(val_dataset_loader):
                     extra_inputs={}
                     for key, value in inputs.items():
@@ -206,6 +199,8 @@ def main(local_rank, args):
                                     kwargs=extra_inputs)
                     data_time_e = time.time()
                     outputs = my_model.val_step(new_inputs)
+                    predict=outputs["predict"]
+                    predict_list.append(predict)
                     log_info=""
                     for key, value in outputs["log_vars"].items():
                         log_info+="{}: {:.3f} ".format(key,value)
@@ -213,6 +208,9 @@ def main(local_rank, args):
                     if i_iter_val % print_freq == 0 and local_rank == 0 and rank == 0:
                         logger.info('[EVAL] Epoch %d Iter %5d: %s'%(
                             epoch, i_iter_val,log_info))
+                    val_metric=val_dataset.evaluate(predict_list)
+                    for key, value in val_metric.items():
+                        logger.info("val_{}: {:.3f}".format(key,value))
                     
         # val_miou_pts = CalMeanIou_pts._after_epoch()
         # if best_val_miou_pts < val_miou_pts:
@@ -224,17 +222,14 @@ def main(local_rank, args):
         
         epoch += 1
         
-
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--py-config', default='config/config_ginfomax.py')
-    parser.add_argument('--work-dir', type=str, default='./out/test_ginfo')
+    parser.add_argument('--py-config', default='config/config_gcn_cvpa.py')
+    parser.add_argument('--work-dir', type=str, default='./out/cvpa_gcn')
     parser.add_argument('--dist', action='store_true')
     parser.add_argument('--resume-from', type=str, default='')
-
     args = parser.parse_args()
-    
     ngpus = torch.cuda.device_count()
     args.gpus = ngpus
     print(args)

@@ -1,0 +1,20 @@
+_base_=[
+    "./__base__/datasets/cvpa.py",
+    "./__base__/schedules/schedule.py",
+    "./__base__/default_runtime.py"
+]
+
+model=dict(
+    type="GrapNodeCls",
+    encoder=dict(
+        type="GCN",
+        num_features=48,
+        hidden_channels=100,
+        num_classes=100,
+        ),
+    decoder=dict(
+        type="LinearHead",
+        input_proj_dim=100,
+        proj_hidden_dim=1,
+    )
+)
