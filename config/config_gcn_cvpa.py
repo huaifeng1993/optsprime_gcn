@@ -10,7 +10,7 @@ model=dict(
         type="GCN",
         num_features=48,
         hidden_channels=100,
-        num_classes=100,
+        num_classes=1,
         ),
     decoder=dict(
         type="LinearHead",

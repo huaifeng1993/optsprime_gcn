@@ -5,15 +5,19 @@ from ..builder import ENCODER
 
 @ENCODER.register_module()
 class MLP(torch.nn.Module):
-    def __init__(self, hidden_channels,num_features,num_classes):
+    def __init__(self, hidden_channels,num_features,proj_channels):
         super().__init__()
-        torch.manual_seed(12345)
         self.lin1 = Linear(num_features, hidden_channels)
-        self.lin2 = Linear(hidden_channels, num_classes)
+        #self.init_emb()
 
-    def forward(self, x):
-        x = self.lin1(x)
+    def init_emb(self):
+        for m in self.modules():
+            if isinstance(m, Linear):
+                torch.nn.init.xavier_uniform_(m.weight.data)
+                if m.bias is not None:
+                    m.bias.data.fill_(0.0)
+
+    def forward(self, inputs,training=True,**kwargs):
+        x = self.lin1(inputs.x)
         x = x.relu()
-        x = F.dropout(x, p=0.5, training=self.training)
-        x = self.lin2(x)
         return x

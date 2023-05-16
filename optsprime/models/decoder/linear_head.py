@@ -8,7 +8,7 @@ class LinearHead(torch.nn.Module):
         super(LinearHead, self).__init__()
         self.proj_head = Sequential(Linear(input_proj_dim, input_proj_dim),ReLU())
         self.lin2 = Sequential(Linear(input_proj_dim, proj_hidden_dim))
-        self.init_emb()
+        #self.init_emb()
 	
     def init_emb(self):
         for m in self.modules():
