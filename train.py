@@ -156,7 +156,7 @@ def main(local_rank, args):
             loss_all.backward()
             grad_norm = torch.nn.utils.clip_grad_norm_(my_model.parameters(), cfg.train_cfg.clip_norm)
             optimizer.step()
-            #scheduler.step()
+            scheduler.step()
             time_e = time.time()
             global_iter += 1
             if i_iter % print_freq == 0 and local_rank == 0 and rank == 0:
@@ -225,8 +225,8 @@ def main(local_rank, args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--py-config', default="config/config_gcn_cvpa.py")
-    parser.add_argument('--work-dir', type=str, default='./out/cvpa_gcn')
+    parser.add_argument('--py-config', default="config/config_sage.py")
+    parser.add_argument('--work-dir', type=str, default='./out/cvpa_sage')
     parser.add_argument('--dist', action='store_true')
     parser.add_argument('--resume-from', type=str, default='')
     args = parser.parse_args()
