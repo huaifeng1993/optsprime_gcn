@@ -13,7 +13,7 @@ lr_schedule = dict(
     step_size=1000,
     gamma=0.1)
 
-train_cfg = dict(max_epochs=500,
+train_cfg = dict(max_epochs=1000,
                  print_freq=5,
                  val_step=5,
                  clip_norm=37.5

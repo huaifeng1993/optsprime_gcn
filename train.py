@@ -226,7 +226,7 @@ if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--py-config', default="config/config_sage.py")
-    parser.add_argument('--work-dir', type=str, default='./out/cvpa_sage')
+    parser.add_argument('--work-dir', type=str, default='./out/cvpa_edge_byfeature')
     parser.add_argument('--dist', action='store_true')
     parser.add_argument('--resume-from', type=str, default='')
     args = parser.parse_args()
