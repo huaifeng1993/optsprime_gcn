@@ -22,7 +22,10 @@ class CVPADataset(InMemoryDataset):
 				 ratio_test:float =0.1,
 				 random_seed: int = 1234,
 	             transform: Optional[Callable]=None,
-	             pre_transform: Optional[Callable] = None):
+	             pre_transform: Optional[Callable] = None,
+		     	 task_type: list = ['classification'],
+			     num_tasks: int = 1,
+				 ):
 		self.root = data_root
 		super(CVPADataset, self).__init__(data_root, transform, pre_transform)
 		self.data, self.slices = torch.load(self.processed_paths[0])
@@ -30,6 +33,8 @@ class CVPADataset(InMemoryDataset):
 		num_train=self.get(0).num_nodes
 		num_val=int(ratio_val*num_train)
 		num_test=int(ratio_test*num_train)
+		self.task_type = task_type
+		self.num_tasks = num_tasks
 		random.seed(random_seed)
 		assert self.split in ['random']
 		if self.split == 'random':
@@ -73,10 +78,20 @@ class CVPADataset(InMemoryDataset):
 		feature_x = feature_df.drop(['overdue7'], axis=1)
 		feature_x=(feature_x-feature_x.min())/(feature_x.max()-feature_x.min())
 		edge_df = pd.read_csv(os.path.join(self.raw_dir,'CVPA_preprocess_edge_index.csv'))
-		
+		#读取边的权重
+		edge_weight_df = pd.read_csv(os.path.join(self.raw_dir,'CVPA_preprocess_edge_weight.csv'))
+		edge_weight=edge_weight_df['weight']
+		edge_weight=(edge_weight-edge_weight.min())/11
+		edge_weight=edge_weight.values
+		edge_weight=torch.tensor(edge_weight,dtype=torch.float)
+		#读取边的属性
+		edge_attr_df = pd.read_csv(os.path.join(self.raw_dir,'CVPA_preprocess_edge_attr.csv'))
+		edge_attr_df =edge_attr_df.values
+		edge_attr=torch.tensor(edge_attr_df,dtype=torch.float)
+	
 		edge_index = torch.tensor(edge_df[['src','dst']].values,dtype=torch.long).t().contiguous()
 		x = torch.tensor(feature_x.values,dtype=torch.float)
-		y = torch.tensor(label.values,dtype=torch.long)
+		y = torch.tensor(label.values,dtype=torch.long).view([-1,1])
 		train_index = torch.arange(y.size(0), dtype=torch.long)
 		val_index = train_index
 		test_index= train_index
@@ -85,7 +100,7 @@ class CVPADataset(InMemoryDataset):
 		test_mask =self.index_to_mask(test_index, size=y.size(0))
 
 		data_list = []
-		data = Data(x=x, edge_index=edge_index, y=y)
+		data = Data(x=x, edge_index=edge_index, y=y,edge_attr=edge_attr,edge_weight=edge_weight)
 		data.train_mask=train_mask
 		data.val_mask=val_mask
 		data.test_mask=test_mask

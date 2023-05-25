@@ -18,3 +18,7 @@ for data in data_loader:
 #dataset=PygGraphPropPredDataset(name="ogbg-molesol", root='./data/original_datasets/')
 #dataset=PyGPPDataset(name="ogbg-molesol", root='./data/original_datasets/')
 print(len(dataset))
+
+import numpy as np
+
+np.argsort()

@@ -27,6 +27,7 @@ import random
 
 data_path="data/wlx/CVPA_preprocess_drop_branch_code.csv"
 X_all,Y_all = custom_preprocessing(data_path)
+feature_names = X_all.columns.to_list()
 X_all=X_all.values.astype(np.float32)
 Y_all=Y_all.values.astype(np.int64)
 num_train=len(Y_all)
@@ -88,6 +89,21 @@ def objective(space):
     pred_res= (pred_prob>0.25)*1
     eval.clc_update(y_test,pred_prob,pred_res)
     res=eval.mean()
+    feature_importance = clf.feature_importances_
+
+    # 获取前10个特征的索引和重要性得分
+    top10_indices = np.argsort(feature_importance)[-10:]
+    top10_scores = feature_importance[top10_indices]
+        
+    top10_features = [feature_names[i] for i in top10_indices]
+    print(top10_features)
+    plt.figure()
+    plt.barh(range(len(top10_scores)), top10_scores, align='center')
+    plt.yticks(range(len(top10_scores)),top10_features)
+    plt.xlabel('Feature Importance')
+    plt.ylabel('Feature')
+    plt.title('lgbm Feature Importance')
+    plt.savefig("lgbm_feature_importance.png")
     return {'loss': -res["auc_mean"],"space":space,'status': STATUS_OK }
 objective(None)
 # space={'max_depth': hp.quniform("max_depth", 0, 2, 1)}

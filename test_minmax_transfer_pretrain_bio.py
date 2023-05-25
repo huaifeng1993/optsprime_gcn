@@ -11,8 +11,8 @@ from torch_scatter import scatter
 from tqdm import tqdm
 
 from optsprime.datasets import BioDataset
-from optsprime.transfer import BioGNN
-from optsprime.transfer.learning import GInfoMinMax, ViewLearner
+from optsprime.models.transfer import BioGNN
+from optsprime.models.transfer.learning import GInfoMinMax, ViewLearner
 from optsprime.unsupervised.utils import initialize_edge_weight
 
 

@@ -22,9 +22,9 @@ train_cfg = dict(max_epochs=2000,
 model=dict(
     type="GrapNodeCls",
     encoder=dict(
-        type="SAGE",
+        type="GCNWeight",
         num_features=48,
         hidden_channels=100,
-        num_classes=1,
+        num_classes=1
         )
 )
