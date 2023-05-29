@@ -28,7 +28,7 @@ def graph_generage(A,node_num=8,threshold=0.95):
     return edges,edges_weight,edges_attr
 
 def create_graph_from_csv(data_path):
-    data=pd.read_csv(data_path)[:2000]
+    data=pd.read_csv(data_path)#[:2000]
     print("data shape:",data.shape)
     data_new=data.drop("branchcode",axis=1)
     data_new.to_csv("data/wlx/CVPA_preprocess_drop_branch_code_2000.csv",index=False)
