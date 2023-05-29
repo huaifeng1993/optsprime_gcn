@@ -69,7 +69,7 @@ def run(args):
 
     model.eval()
     train_score, val_score, test_score = ee.embedding_evaluation(model.encoder, dataloader)
-    logging.info(
+    print(
         "Before training Embedding Eval Scores: Train: {} Val: {} Test: {}".format(train_score, val_score,
                                                                                          test_score))
 
@@ -137,7 +137,7 @@ def run(args):
             view_learner.eval()
             model.zero_grad()
 
-            x, _ = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, None)
+            _, x = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, None)
             edge_logits = view_learner(batch.batch, batch.x, batch.edge_index, batch.edge_attr)
 
             temperature = 1.0
@@ -148,7 +148,7 @@ def run(args):
             gate_inputs = (gate_inputs + edge_logits) / temperature
             batch_aug_edge_weight = torch.sigmoid(gate_inputs).squeeze().detach()
 
-            x_aug, _ = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, batch_aug_edge_weight)
+            _,x_aug = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, batch_aug_edge_weight)
 
             model_loss = model.calc_loss(x, x_aug)
             model_loss_all += model_loss.item() * batch.num_graphs
@@ -160,14 +160,14 @@ def run(args):
         fin_view_loss = view_loss_all / len(dataloader)
         fin_reg = reg_all / len(dataloader)
 
-        logging.info('Epoch {}, Model Loss {}, View Loss {}, Reg {}'.format(epoch, fin_model_loss, fin_view_loss, fin_reg))
+        print('Epoch {}, Model Loss {}, View Loss {}, Reg {}'.format(epoch, fin_model_loss, fin_view_loss, fin_reg))
         model_losses.append(fin_model_loss)
         view_losses.append(fin_view_loss)
         view_regs.append(fin_reg)
 
         model.eval()
         train_score, val_score, test_score = ee.embedding_evaluation(model.encoder, dataloader)
-        logging.info(
+        print(
             "Metric: {} Train: {} Val: {} Test: {}".format(evaluator.eval_metric, train_score, val_score, test_score))
 
         train_curve.append(train_score)
@@ -181,11 +181,11 @@ def run(args):
         best_val_epoch = np.argmin(np.array(valid_curve))
         best_train = min(train_curve)
 
-    logging.info('FinishedTraining!')
-    logging.info('BestEpoch: {}'.format(best_val_epoch))
-    logging.info('BestTrainScore: {}'.format(best_train))
-    logging.info('BestValidationScore: {}'.format(valid_curve[best_val_epoch]))
-    logging.info('FinalTestScore: {}'.format(test_curve[best_val_epoch]))
+    print('FinishedTraining!')
+    print('BestEpoch: {}'.format(best_val_epoch))
+    print('BestTrainScore: {}'.format(best_train))
+    print('BestValidationScore: {}'.format(valid_curve[best_val_epoch]))
+    print('FinalTestScore: {}'.format(test_curve[best_val_epoch]))
 
     return valid_curve[best_val_epoch], test_curve[best_val_epoch]
 
@@ -211,7 +211,7 @@ def arg_parse():
                         help='batch size')
     parser.add_argument('--drop_ratio', type=float, default=0.0,
                         help='Dropout Ratio / Probability')
-    parser.add_argument('--epochs', type=int, default=50,
+    parser.add_argument('--epochs', type=int, default=1000,
                         help='Train Epochs')
     parser.add_argument('--reg_lambda', type=float, default=5.0, help='View Learner Edge Perturb Regularization Strength')
 

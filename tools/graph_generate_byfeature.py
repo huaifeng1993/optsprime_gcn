@@ -28,10 +28,10 @@ def graph_generage(A,node_num=8,threshold=0.95):
     return edges,edges_weight,edges_attr
 
 def create_graph_from_csv(data_path):
-    data=pd.read_csv(data_path)
-       
+    data=pd.read_csv(data_path)[:2000]
+    print("data shape:",data.shape)
     data_new=data.drop("branchcode",axis=1)
-    data_new.to_csv("data/wlx/CVPA_preprocess_drop_branch_code.csv",index=False)
+    data_new.to_csv("data/wlx/CVPA_preprocess_drop_branch_code_2000.csv",index=False)
     int_col=["branchcode","education","job","familysize","labor","industry","incomesource","house","education2","education3","use7","relation2"]
     data=data[int_col]
     data_group=data.groupby("branchcode")
@@ -43,15 +43,15 @@ def create_graph_from_csv(data_path):
         print(name)
         data=data.drop("branchcode",axis=1)
         data=data.to_numpy()
-        edge_index,edges_weight,edges_attr=graph_generage(data,node_num=9,threshold=0.95)
+        edge_index,edges_weight,edges_attr=graph_generage(data,node_num=11,threshold=0.95)
         edge_index_all.extend(edge_index)
         edges_weight_all.extend(edges_weight)
         edges_attr_all.extend(edges_attr)
         #保存边的index的csv文件，特征特征名称为dst和src
-    pd.DataFrame(edge_index_all).to_csv("data/wlx/CVPA_preprocess_edge_index.csv",index=False,header=["src","dst"])
-    pd.DataFrame(edges_weight_all).to_csv("data/wlx/CVPA_preprocess_edge_weight.csv",index=False,header=["weight"])
-    pd.DataFrame(edges_attr_all).to_csv("data/wlx/CVPA_preprocess_edge_attr.csv",index=False)
-    return edge_index
+    pd.DataFrame(edge_index_all).to_csv("data/wlx/CVPA_preprocess_edge_index_2000.csv",index=False,header=["src","dst"])
+    pd.DataFrame(edges_weight_all).to_csv("data/wlx/CVPA_preprocess_edge_weight_2000.csv",index=False,header=["weight"])
+    pd.DataFrame(edges_attr_all).to_csv("data/wlx/CVPA_preprocess_edge_attr_2000.csv",index=False)
+    return len(edge_index_all)
 
-edge_index=create_graph_from_csv("data/wlx/CVPA_preprocess.csv")
-print(len(edge_index))
+edge_index_num=create_graph_from_csv("data/wlx/CVPA_preprocess.csv")
+print(edge_index_num)

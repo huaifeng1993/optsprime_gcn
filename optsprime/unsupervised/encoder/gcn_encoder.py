@@ -108,4 +108,5 @@ class GCNEncoder(torch.nn.Module):
 		y = np.concatenate(y, 0)
 		train_mask = np.concatenate(train_mask, 0)
 		test_mask = np.concatenate(test_mask, 0)
+		val_mask = np.concatenate(val_mask, 0)
 		return ret, y,train_mask,test_mask,val_mask
