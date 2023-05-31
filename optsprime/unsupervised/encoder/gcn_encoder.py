@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from ogb.graphproppred.mol_encoder import AtomEncoder, BondEncoder
 from torch.nn import Sequential, Linear, ReLU,Embedding
 from torch_geometric.nn import global_add_pool,Linear
-from ..convs import GINEConv
+from ..convs import GINEConv,SAGEConv
 
 
 class GCNEncoder(torch.nn.Module):
@@ -32,8 +32,9 @@ class GCNEncoder(torch.nn.Module):
 		self.bond_encoder = Linear(11,emb_dim)
 
 		for i in range(num_gc_layers):
-			nn = Sequential(Linear(emb_dim, 2*emb_dim), torch.nn.BatchNorm1d(2*emb_dim), ReLU(), Linear(2*emb_dim, emb_dim))
-			conv = GINEConv(nn)
+			#nn = Sequential(Linear(emb_dim, 2*emb_dim), torch.nn.BatchNorm1d(2*emb_dim), ReLU(), Linear(2*emb_dim, emb_dim))
+			#conv = GINEConv(nn)
+			conv = SAGEConv(emb_dim,emb_dim)
 			bn = torch.nn.BatchNorm1d(emb_dim)
 			self.convs.append(conv)
 			self.bns.append(bn)

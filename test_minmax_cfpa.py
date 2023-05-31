@@ -197,13 +197,13 @@ def arg_parse():
                         help='Dataset')
     parser.add_argument('--model_lr', type=float, default=0.001,
                         help='Model Learning rate.')
-    parser.add_argument('--view_lr', type=float, default=0.001,
+    parser.add_argument('--view_lr', type=float, default=0.01,
                         help='View Learning rate.')
-    parser.add_argument('--num_gc_layers', type=int, default=5,
+    parser.add_argument('--num_gc_layers', type=int, default=1,
                         help='Number of GNN layers before pooling')
     parser.add_argument('--pooling_type', type=str, default='standard',
                         help='GNN Pooling Type Standard/Layerwise')
-    parser.add_argument('--emb_dim', type=int, default=32,
+    parser.add_argument('--emb_dim', type=int, default=100,
                         help='embedding dimension')
     parser.add_argument('--mlp_edge_model_dim', type=int, default=64,
                         help='embedding dimension')
