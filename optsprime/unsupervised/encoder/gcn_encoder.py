@@ -27,17 +27,17 @@ class GCNEncoder(torch.nn.Module):
 
 		self.convs = torch.nn.ModuleList()
 		self.bns = torch.nn.ModuleList()
-
-		self.atom_encoder = Linear(48,emb_dim)
-		self.bond_encoder = Linear(11,emb_dim)
+		self.atom_encoder = torch.nn.Sequential(Linear(48,emb_dim))
+		self.bond_encoder =torch.nn.Sequential(torch.nn.Linear(11,emb_dim))
 
 		for i in range(num_gc_layers):
-			#nn = Sequential(Linear(emb_dim, 2*emb_dim), torch.nn.BatchNorm1d(2*emb_dim), ReLU(), Linear(2*emb_dim, emb_dim))
-			#conv = GINEConv(nn)
+			# nn = Sequential(Linear(emb_dim, 2*emb_dim), torch.nn.BatchNorm1d(2*emb_dim), ReLU(), Linear(2*emb_dim, emb_dim))
+			# conv = GINEConv(nn) 
 			conv = SAGEConv(emb_dim,emb_dim)
 			bn = torch.nn.BatchNorm1d(emb_dim)
 			self.convs.append(conv)
 			self.bns.append(bn)
+			
 
 		self.init_emb()
 
@@ -51,7 +51,6 @@ class GCNEncoder(torch.nn.Module):
 	def forward(self, batch, x, edge_index, edge_attr, edge_weight=None):
 		x = self.atom_encoder(x)
 		edge_attr = self.bond_encoder(edge_attr)
-
 		# compute node embeddings using GNN
 		xs = []
 		for i in range(self.num_gc_layers):

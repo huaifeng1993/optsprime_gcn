@@ -7,6 +7,7 @@ import torch
 from ogb.graphproppred import Evaluator
 from ogb.graphproppred import PygGraphPropPredDataset
 from sklearn.linear_model import Ridge, LogisticRegression
+from lightgbm import LGBMClassifier
 from torch_geometric.data import DataLoader
 from torch_geometric.transforms import Compose
 from torch_scatter import scatter
@@ -17,7 +18,7 @@ from optsprime.unsupervised.encoder import GCNEncoder
 from optsprime.unsupervised.learning import GInfoMinMax
 from optsprime.unsupervised.utils import initialize_edge_weight
 from optsprime.unsupervised.cls_learner import ClsLearner
-from optsprime.datasets import CVPADataset
+from optsprime.datasets import CVPADataset,CVPADatasetSub
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -38,7 +39,7 @@ def run(args):
     evaluator = Evaluator(name=args.dataset)
     evaluator.eval_metric = "rocauc"
     my_transforms = Compose([initialize_edge_weight])
-    dataset = CVPADataset('data/CVPA',transform=my_transforms)
+    dataset = CVPADatasetSub('data/CVPA',transform=my_transforms)
 
     # split_idx = dataset.get_idx_split()
     # train_loader = DataLoader(dataset[split_idx["train"]], batch_size=128, shuffle=True)
@@ -46,11 +47,10 @@ def run(args):
     # test_loader = DataLoader(dataset[split_idx["test"]], batch_size=128, shuffle=False)
 
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
-
+    print(len(dataloader))
     model = GInfoMinMax(GCNEncoder(emb_dim=args.emb_dim, num_gc_layers=args.num_gc_layers, drop_ratio=args.drop_ratio, pooling_type=args.pooling_type),
                     proj_hidden_dim=args.emb_dim).to(device)
     model_optimizer = torch.optim.Adam(model.parameters(), lr=args.model_lr)
-
 
     view_learner = ClsLearner(GCNEncoder(emb_dim=args.emb_dim, num_gc_layers=args.num_gc_layers, drop_ratio=args.drop_ratio, pooling_type=args.pooling_type),
                                mlp_edge_model_dim=args.mlp_edge_model_dim).to(device)
@@ -60,6 +60,9 @@ def run(args):
         ee = NodeEmbEvaluation(LogisticRegression(dual=False, fit_intercept=True, max_iter=5000),
                                  evaluator, dataset.task_type, dataset.num_tasks, device, params_dict=None,
                                  param_search=True)
+        # ee = NodeEmbEvaluation(LGBMClassifier(),
+        #                          evaluator, dataset.task_type, dataset.num_tasks, device, params_dict=None,
+        #                          param_search=False)
     elif 'regression' in dataset.task_type:
         ee = NodeEmbEvaluation(Ridge(fit_intercept=True, normalize=True, copy_X=True, max_iter=5000),
                                  evaluator, dataset.task_type, dataset.num_tasks, device, params_dict=None,
@@ -69,10 +72,8 @@ def run(args):
 
     model.eval()
     train_score, val_score, test_score = ee.embedding_evaluation(model.encoder, dataloader)
-    print(
-        "Before training Embedding Eval Scores: Train: {} Val: {} Test: {}".format(train_score, val_score,
+    print("Before training Embedding Eval Scores: Train: {} Val: {} Test: {}".format(train_score, val_score,
                                                                                          test_score))
-
     model_losses = []
     view_losses = []
     view_regs = []
@@ -94,7 +95,6 @@ def run(args):
             model.eval()
             _, x = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, None)
             edge_logits = view_learner(batch.batch, batch.x, batch.edge_index, batch.edge_attr)
-
             temperature = 1.0
             bias = 0.0 + 0.0001  # If bias is 0, we run into problems
             eps = (bias - (1 - bias)) * torch.rand(edge_logits.size()) + (1 - bias)
@@ -102,14 +102,11 @@ def run(args):
             gate_inputs = gate_inputs.to(device)
             gate_inputs = (gate_inputs + edge_logits) / temperature
             batch_aug_edge_weight = torch.sigmoid(gate_inputs).squeeze()
-
             _,x_aug = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, batch_aug_edge_weight)
             # regularization
-
             row, col = batch.edge_index
             edge_batch = batch.batch[row]
             edge_drop_out_prob = 1 - batch_aug_edge_weight
-
             uni, edge_batch_num = edge_batch.unique(return_counts=True)
             sum_pe = scatter(edge_drop_out_prob, edge_batch, reduce="sum")
 
@@ -122,24 +119,22 @@ def run(args):
                     # means no edges in that graph. So don't include.
                     pass
             num_graph_with_edges = len(reg)
+            if num_graph_with_edges == 0:
+                reg = [torch.tensor([0.0]).to(device)]
             reg = torch.stack(reg)
             reg = reg.mean()
-
             view_loss = model.calc_loss(x, x_aug) - (args.reg_lambda * reg)
             view_loss_all += view_loss.item() * batch.num_graphs
             reg_all += reg.item()
             # gradient ascent formulation
             (-view_loss).backward()
             view_optimizer.step()
-
             # train (model) to minimize contrastive loss
             model.train()
             view_learner.eval()
             model.zero_grad()
-
             _, x = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, None)
             edge_logits = view_learner(batch.batch, batch.x, batch.edge_index, batch.edge_attr)
-
             temperature = 1.0
             bias = 0.0 + 0.0001  # If bias is 0, we run into problems
             eps = (bias - (1 - bias)) * torch.rand(edge_logits.size()) + (1 - bias)
@@ -147,9 +142,7 @@ def run(args):
             gate_inputs = gate_inputs.to(device)
             gate_inputs = (gate_inputs + edge_logits) / temperature
             batch_aug_edge_weight = torch.sigmoid(gate_inputs).squeeze().detach()
-
             _,x_aug = model(batch.batch, batch.x, batch.edge_index, batch.edge_attr, batch_aug_edge_weight)
-
             model_loss = model.calc_loss(x, x_aug)
             model_loss_all += model_loss.item() * batch.num_graphs
             # standard gradient descent formulation
@@ -186,18 +179,16 @@ def run(args):
     print('BestTrainScore: {}'.format(best_train))
     print('BestValidationScore: {}'.format(valid_curve[best_val_epoch]))
     print('FinalTestScore: {}'.format(test_curve[best_val_epoch]))
-
     return valid_curve[best_val_epoch], test_curve[best_val_epoch]
 
 
 def arg_parse():
     parser = argparse.ArgumentParser(description='AD-GCL ogbg-mol*')
-
     parser.add_argument('--dataset', type=str, default='ogbg-molesol',
                         help='Dataset')
-    parser.add_argument('--model_lr', type=float, default=0.001,
+    parser.add_argument('--model_lr', type=float, default=0.01,
                         help='Model Learning rate.')
-    parser.add_argument('--view_lr', type=float, default=0.01,
+    parser.add_argument('--view_lr', type=float, default=0.1,
                         help='View Learning rate.')
     parser.add_argument('--num_gc_layers', type=int, default=1,
                         help='Number of GNN layers before pooling')
@@ -211,12 +202,10 @@ def arg_parse():
                         help='batch size')
     parser.add_argument('--drop_ratio', type=float, default=0.0,
                         help='Dropout Ratio / Probability')
-    parser.add_argument('--epochs', type=int, default=1000,
+    parser.add_argument('--epochs', type=int, default=100,
                         help='Train Epochs')
     parser.add_argument('--reg_lambda', type=float, default=5.0, help='View Learner Edge Perturb Regularization Strength')
-
     parser.add_argument('--seed', type=int, default=0)
-
     return parser.parse_args()
 
 

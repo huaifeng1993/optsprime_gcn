@@ -42,8 +42,10 @@ def create_graph_from_csv(data_path):
     num_edge=[]
     num_node=[]
     for name,data in data_group:
-        print(name)
+       
         data=data.drop("branchcode",axis=1)
+        #重新设置index
+        data.index=range(len(data))
         data=data.to_numpy()
         edge_index,edges_weight,edges_attr=graph_generage(data,node_num=11,threshold=0.95)
         edge_index_all.extend(edge_index)
@@ -51,6 +53,7 @@ def create_graph_from_csv(data_path):
         edges_attr_all.extend(edges_attr)
         num_edge.append(len(edge_index))
         num_node.append(len(data))
+        print(name,"num_node:",len(data),"num_edge:",len(edge_index))
         #保存边的index的csv文件，特征特征名称为dst和src
     pd.DataFrame(edge_index_all).to_csv("data/wlx/CVPA_preprocess_edge_index.csv",index=False,header=["src","dst"])
     pd.DataFrame(edges_weight_all).to_csv("data/wlx/CVPA_preprocess_edge_weight.csv",index=False,header=["weight"])
